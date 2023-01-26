@@ -1,0 +1,197 @@
+##-----Call out all packages I might need to create visualization. Not all were used to make this plot-----##
+
+x = c("tidyverse","viridis", "ggthemes","scales", "data.table","RcppRoll","dplyr",
+      "patchwork","reshape2","tidyquant","kableExtra","knitr","flexdashboard",
+      "ggforce","gt","sf","tidycensus","lubridate","gridExtra", "ggplot2",
+      "blscrapeR", "ggrepel","cowplot", "RODBC", "RODBCDBI",
+      "readxl","Rcpp", "DBI", "tigris", "zoo", "plotly", "acs", "readxl",
+      "leaflet", "usmap", "tidytuesdayR", "DBI", "treemapify", "neonUtilities",
+      "WordR", "finalfit","waffle", "ggbeeswarm","showtext", "MetBrewer", "ggtext")
+
+lapply(x, library, character.only = TRUE, warn.conflicts = FALSE)
+
+
+##-----Download data-----##
+
+survivalists_ <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-24/survivalists.csv')
+
+##-----Focusing on Survivalist data, filtering out unwanted columns-----##
+
+survivalists <- survivalists_ %>%
+  select(season, name, result, days_lasted, medically_evacuated, profession) %>%
+  mutate(profession_category =
+
+##-----Creating Profession Categories-----##
+  
+           case_when(profession == "Accountant"|
+                       profession == "Community Leadership"|
+                       profession == "Educational Consultant"|
+                       profession == "Industrial Project Manager"| 
+                       profession == "Aboriginal Skills Instructor" | 
+                       profession == "High School Teacher" |
+                       profession == "Outdoor Gear Retailer"|
+                       profession == "Retail Sporting Goods Owner" ~ "Business, Corporate, & Retail",
+                    
+                    profession == "Adventure Videographer"|
+                       profession == "Author"|
+                       profession == "Freelance Writer"|
+                       profession == "Writer and Former Missionary"|
+                       profession == "Environmental Scientist"| 
+                       profession == "Physician"|
+                       profession == "Psychotherapist"| 
+                       profession == "Anthropologist"|
+                       profession == "Biologist & Forrester"|
+                       profession == "Research Assistant"|
+                       profession == "Biologist" ~ "Art/ Science",
+                    
+                    profession == "Law Enforcement"|
+                       profession == "Law Enforcement and Former Air Force"|
+                       profession == "Former Wildland Firefighter"|
+                       profession == "Former US Sniper"|
+                       profession == "Former US Army"|
+                       profession == "US Army Guard and Former US Coast Guard"|
+                       profession == "Corrections Officer"|
+                       profession == "Retired Green Bere"| 
+                       profession == "Retired Green Beret"|
+                       profession == "Retired Military/Homesteader" ~ "Law Enforcement/ Military",
+                   
+                     profession == "Blacksmith"|
+                       profession == "Bushcraft Instructor"|
+                       profession == "Construction Laborer/Lead Singer"|
+                       profession == "Ancestral Living Skills Instructor"|
+                       profession == "Bushcraft Instructor"|
+                       profession == "Disaster Preparedness Instructor"|
+                       profession == "Primitive Skills Instructor"|
+                       profession == "Primitive Technology Instructor"|
+                       profession == "Winter Wilderness Expedition Operator"|
+                       profession == "Sniper & Survival Skills Instructor"|
+                       profession == "Survival Instructor"|
+                       profession == "Wilderness Living Skills Instructor"|
+                       profession == "SERE Specialist"|
+                       profession == "Self Defense Instructor"|
+                       profession == "Hunting and Packgoat Guide"|
+                       profession == "Hunting Guide"|
+                       profession == "Outdoor Educator"|
+                       profession == "Survivial Instructor"|
+                       profession == "Wilderness Skills Instructor"|
+                       profession == "Primitive Skills School Owner"|
+                       profession == "Ancestral Skills Teacher"|
+                       profession == "Wilderness Guide"|
+                       profession == "Professional Bowyer & Hunter"|
+                       profession == "Wilderness Survival Instructor"|
+                       profession == "Wilderness/Primitive Skills Instructor"|
+                       profession == "Wilderness Expedition Guide"|
+                       profession == "Outdoor Professional" ~ "Wildlife Skill Professionals & Instructors",
+                   
+                    profession == "Herbalist"|
+                       profession == "Fisherman" |
+                       profession == "Commercial Fisherman" |
+                       profession == "Prescribed Fire Practitioner, Regenerative Agriculturalist, Leatherworker"|
+                       profession == "Survivalist and Wildlife Therapist/Natural Healing"|
+                       profession == "Homesteader"|
+                       profession == "Homesteader & Carpenter"|
+                       profession == "Survivial Instructor" |
+                       profession == "Trapper" |
+                       profession == "Homesteader & Educator"~ "Agricultural",
+                    
+                    profession == "Oil Rig Roughneck"|
+                       profession == "Equipment Operator"|
+                       profession == "Electrician"|
+                       profession == "Construction"|
+                       profession == "Construction Foreman"|
+                       profession == "Tool Maker"|
+                       profession == "Drywaller" |
+                       profession == "Boat builder"|
+                       profession == "Carpenter"|
+                       profession == "Builder"|
+                       profession == "Alpaca Shearer, Treehouse builder"|
+                       profession == "Traditional Bowyer" ~ "Construction/ Craftsperson",
+                    
+                    profession == "Search and Rescue K9 Handler"|
+                       profession == "Self Defense Instructor" |
+                       profession == "Butcher" |
+                      profession == "Retired Shipping Driver" ~ "Other Active Occupations",
+                    
+                    profession == "Prehistoric Leather Specialist" ~ "Other Inactive Occupations"))
+
+
+##-----Fonts & title creation-----##
+
+
+font_add_google("Oswald", "title_font")
+font_add_google("Rubik", "body_font")
+showtext_auto()
+
+title_font <- "title_font"
+body_font <- "body_font"
+
+
+title_text <- str_wrap("Number of Days Lasted in \"Alone\" Based on Occupation Type",35)
+y_axis_title <- "Days Lasted in Alone"
+subtitle_text <- str_wrap("This data is from the Alone Data Package by Dan Oehm and contains data from the TV series 'Alone'. 
+                Each point represents an individaul survivalist, their profession, and how many days they lasted in the Artic winter.", 107)
+caption_text <- str_wrap("Occupation groups were organized by similar activity level within groups.
+                         Source: (alone) and \"50 Most Physical Jobs in America\" (www.stacker.com/careers/50-most-physical-jobs-america)", 115)
+
+
+bg <-  "#79846d"
+title_col <- "#eedece"
+body_col <- "#e0d5b9"
+axis_col <-
+point_col <- "#402a16"
+
+
+##-----Creating the Plot-----##
+
+survivalists_plot <- survivalists %>% 
+  ggplot() +
+  aes(y = days_lasted, x = profession_category) +
+  geom_beeswarm(color = point_col, size= 3) +
+  coord_flip() +
+  scale_x_discrete(limits = c("Other Inactive Occupations","Other Active Occupations", 
+                              "Law Enforcement/ Military","Business, Corporate, & Retail",
+                              "Art/ Science",  "Agricultural", "Construction/ Craftsperson",
+                              "Wildlife Skill Professionals & Instructors"))+
+  labs(title = title_text,
+        subtitle = subtitle_text,
+        caption = caption_text,
+        x= "",
+        y= y_axis_title)+
+  theme_minimal()+           
+  theme(plot.title = element_text(family = title_font,
+                                  size = 45,
+                                  color = title_col,
+                                  hjust=.5,
+                                  vjust = 5),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(family = body_font,
+                                     size = 21,
+                                     color = body_col,
+                                     hjust=.5,
+                                     vjust = 3.6),
+        plot.caption = element_text(family = body_font,
+                                    size = 15,
+                                    color = body_col,
+                                    vjust = -10),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(family = body_font,
+                                    size = 15,
+                                    color = body_col),
+        axis.text.y = element_text(family = body_font,
+                                   size = 18,
+                                   color = body_col),
+        axis.text.x = element_text(family = body_font,
+                                   size = 18,
+                                   color = body_col),
+        panel.grid.major = element_line(color = "#d6ac85"),
+        panel.grid.minor = element_line(color = "#cd9c6d"),
+        plot.background = element_rect(color=bg, fill=bg),
+        plot.margin = margin(70,70,70,70))  ##top, right, bottom, and left margins##
+        
+##-----Saving Plot-----##
+
+showtext_opts(dpi = 320)
+ggsave("survivalists-week-03.png", height = 9,
+       width = 16, dpi = 300, path = "S:\\ra\\MIS\\COVID-19\\Lexi\\2023\\Tidy Tuesday")  
+showtext_auto(FALSE)
